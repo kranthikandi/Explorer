@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Place Explorer</title>
+<link rel="stylesheet" href="../CSS/css/bootstrap-responsive.css">
+<link rel="stylesheet" href="../CSS/css/bootstrap-responsive.min.css">
+<link rel="stylesheet" href="../CSS/css/bootstrap.css">
+<link rel="stylesheet" href="../CSS/css/bootstrap.min.css">
+</head>
+<body>
+<script>
+$('#tabledata').hide();
+window.fbAsyncInit = function() {
+	FB.init({
+		appId      : '971173962970596',
+		xfbml      : true,
+		version    : 'v2.5'
+	});
+};	
+		(function(d, s, id){
+	var js, fjs = d.getElementsByTagName(s)[0];
+	if (d.getElementById(id)) {return;}
+	js = d.createElement(s); js.id = id;
+	js.src = "//connect.facebook.net/en_US/sdk.js";
+	fjs.parentNode.insertBefore(js, fjs);
+}(document, 'script', 'facebook-jssdk'));
+
+function getData(){
+var url
+var lat="";
+var pageData=new Array();
+var lng="";
+var city="";
+var thislocation="";
+var valuess="";
+var table="";
+
+ var geocoder =  new google.maps.Geocoder();
+    geocoder.geocode( { 'address': $('#city').val()}, function(results, status) {
+          if (status == google.maps.GeocoderStatus.OK) {
+            lat=parseFloat(results[0].geometry.location.lat());
+            lng=parseFloat(results[0].geometry.location.lng());
+          } else {
+            $('.push-down').text("Something got wrong " + status);
+          }
+        });
+
+		FB.getLoginStatus(function(response) {
+		if (response.status == 'connected') {
+		
+		 city = $('#city').val();
+         
+         FB.api("search?fields=id%2Cname%2Ccategory%2Clocation%2Ctalking_about_count%2Cwere_here_count%2Clikes%2Clink&limit=250&offset=0&type=place&q="+city+"&center="+lat+","+lng+"&distance=10000",
+           function(responses) {
+			responses.data.sort(function(a,b){
+			var aa=a.were_here_count;
+			var bb=b.were_here_count;
+			return bb-aa;
+		});           
+
+
+$.each(responses.data, function (index, value) {
+   var pageData1={
+  wereAbt: value.were_here_count,
+  id: value.id,
+  name: value.name,
+  category: value.category,
+  address: value.location.street+","+value.location.city+","+value.location.state+","+value.location.zip,
+  city:value.location.city,
+  lat:value.location.latitude,
+  lng:value.location.longitude,
+  talkAbt: value.talking_about_count,
+  likes:value.likes,
+  link:value.link
+  }
+pageData.push(pageData1);
+});
+});
+console.log(pageData);
+
+$.each(pageData, function(key,value){
+table=table+"<tr><td><a href="+pageData[key].link+">"+pageData[key].name+"</a> </td><td>"+pageData[key].wereAbt+" </td><td> "+pageData[key].address+"</td><td> "+ pageData[key].likes+"</td><td> "+pageData[key].talkAbt+"</td></tr>";
+});
+$("#tabledata").show();
+$("#messages").append(table);
+
+        }else if (response.status === 'not_authorized') {
+        alert("not auth");
+		document.getElementById('response').innerHTML = 'not logged in' ;
+		} else {
+		alert("not conne");
+			document.getElementById('response').innerHTML = 'not connected';
+		}
+	});
+	}
+
+       
+</script>
+<div class="container">
+<div class="row">
+<div class="col-md-3"></div>
+<div class="col-md-6 row" id="tfheader">
+<div class="col-md-6"><h3>Explorer</h3></div>
+<div class="col-md-6">
+		<input id ="city" type="text" class="tftextinput" name="q" size="21" maxlength="120">
+		<input type="button" value="search" class="tfbutton" onclick="getData()">
+	<div class="tfclear"></div></div>
+	<div id="tabledata" >
+
+<table id ="messages">
+<thead><td>Name</td><td>No. of checkins</td><td>Address</td><td>Likes</td><td>People Talking</td>
+</thead></table>
+</div>
+</div>
+<div class="col-md-3 colr"></div>
+</div>
+</div>
+</body>
+</html>
